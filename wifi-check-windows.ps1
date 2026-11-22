@@ -3,6 +3,7 @@
 #   powershell -ExecutionPolicy Bypass -File .\wifi-check-windows.ps1
 
 $ErrorActionPreference = 'SilentlyContinue'
+$ProgressPreference = 'SilentlyContinue'  # voortgangsbalk maakt downloads in PowerShell 5.1 veel trager
 $problemen = @()
 function Kop($t) { Write-Host "`n=== $t ===" -ForegroundColor Cyan }
 
