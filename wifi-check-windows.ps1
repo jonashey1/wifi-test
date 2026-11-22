@@ -63,9 +63,14 @@ foreach ($doel in @($gw, '1.1.1.1', '8.8.8.8')) {
   if ($verlies -ge 10) { $problemen += "$verlies% pakketverlies naar $doel." }
 }
 Kop "DNS-snelheid"
-$t = Measure-Command { Resolve-DnsName "example$(Get-Random).com" -DnsOnly | Out-Null }
-Write-Host "DNS-opzoeking: $([math]::Round($t.TotalMilliseconds)) ms"
-if ($t.TotalMilliseconds -gt 200) { $problemen += "Trage DNS ($([math]::Round($t.TotalMilliseconds)) ms). Probeer DNS 1.1.1.1 of 8.8.8.8." }
+# Vraag rechtstreeks aan de ingestelde DNS-server (slaat de lokale cache over), met bekende sites
+$dnsSrv = (Get-DnsClientServerAddress -AddressFamily IPv4 | Where-Object { $_.ServerAddresses } | Select-Object -First 1).ServerAddresses[0]
+$tijden = foreach ($d in 'google.com','youtube.com','wikipedia.org','netflix.com','microsoft.com') {
+  (Measure-Command { Resolve-DnsName $d -Server $dnsSrv -DnsOnly | Out-Null }).TotalMilliseconds
+}
+$dnsMs = [math]::Round(($tijden | Sort-Object)[2])
+Write-Host "DNS-server $dnsSrv : mediaan $dnsMs ms"
+if ($dnsMs -gt 80) { $problemen += "Trage DNS ($dnsMs ms). Probeer DNS 1.1.1.1 of 8.8.8.8." }
 
 # 6. Programma's die bandbreedte gebruiken
 Kop "Programma's met de meeste netwerkverbindingen"
